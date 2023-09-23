@@ -48,4 +48,4 @@ Anti-Fraud System for Banking Operations
 3. На основе очищенных данных создать бейзлайн модели машинного обучения на основе логистической регрессии, подобрать параметры с помощью RandomSearch и получить метрики качества в течение 3 дней.
 
 ## 6.Создание репозитория и Kanban-доски. 
-Done
+[AFSBO Kanban](https://github.com/users/VasilievGrigory/projects/6)
