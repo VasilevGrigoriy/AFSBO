@@ -49,3 +49,12 @@ Anti-Fraud System for Banking Operations
 
 ## 6.Создание репозитория и Kanban-доски. 
 [AFSBO Kanban](https://github.com/users/VasilievGrigory/projects/6)
+
+# Задание 2
+
+## Пункт 1
+Ссылка - https://console.cloud.yandex.ru/folders/b1gr2mj0gcd4qismd8kd/storage/buckets/mlops-otus-task2
+Бакет - s3://mlops-otus-task2
+
+## Пункт 3
+![](images/hdfs_data.png.png)
