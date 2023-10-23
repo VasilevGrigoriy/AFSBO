@@ -57,4 +57,4 @@ Anti-Fraud System for Banking Operations
 Бакет - s3://mlops-otus-task2
 
 ## Пункт 3
-![](images/hdfs_data.png.png)
+![](images/hdfs_data.png)
