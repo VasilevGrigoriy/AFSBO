@@ -71,7 +71,7 @@ def clear_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     return dataframe
 
 
-def main(path_to_file: Path, save_path: Path):
+def main(path_to_file: Path, save_dir: Path):
     spark = (
         SparkSession.builder.appName("OTUS")
         .config("spark.dynamicAllocation.enabled", "true")
@@ -82,8 +82,8 @@ def main(path_to_file: Path, save_path: Path):
     data = load_spark_dataset(spark, path_to_file)
     data = clear_data(data)
 
-    save_path.mkdir(exist_ok=True, parents=True)
-    data.write.parquet(str(save_path))
+    save_dir.mkdir(exist_ok=True, parents=True)
+    data.write.parquet(str(save_dir / path_to_file.name))
 
 
 def parse_args():
@@ -94,9 +94,9 @@ def parse_args():
         help="Path to .txt file with data",
     )
     parser.add_argument(
-        "--save_path",
+        "--save_dir",
         action=Path,
-        help="Path to .parquet file to save",
+        help="Path to dir where file will be saved",
     )
     return parser.parse_args()
 
@@ -104,4 +104,4 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
 
-    main(args.path_to_file.resolve(), args.save_path.resolve())
+    main(args.path_to_file.resolve(), args.save_dir.resolve())
