@@ -1,4 +1,5 @@
 import argparse
+import logging
 from pathlib import Path
 
 import findspark
@@ -10,6 +11,9 @@ import pyspark
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as f
 from pyspark.sql.types import DoubleType, IntegerType, TimestampType, ShortType
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def load_spark_dataset(spark, file_path: Path) -> pyspark.sql.DataFrame:
@@ -72,6 +76,7 @@ def clear_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
 
 
 def main(path_to_file: Path, save_dir: Path):
+    logger.debug("Initializing spark session...")
     spark = (
         SparkSession.builder.appName("OTUS")
         .config("spark.dynamicAllocation.enabled", "true")
@@ -79,11 +84,14 @@ def main(path_to_file: Path, save_dir: Path):
         .config("spark.driver.memory", "4g")
         .getOrCreate()
     )
+    logger.debug("Reading data file...")
     data = load_spark_dataset(spark, path_to_file)
+    logger.debug("Cleaning data file...")
     data = clear_data(data)
 
     save_dir.mkdir(exist_ok=True, parents=True)
     data.write.parquet(str(save_dir / path_to_file.name))
+    logger.debug(f"Cleaned data saved in {str(save_dir / path_to_file.name)}")
 
 
 def parse_args():
