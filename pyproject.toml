@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "afsbo-project"
+version = "0.1.0"
+description = ""
+authors = ["VasilevGrigoriy <vasiliev-greg@mail.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+
+
+[tool.poetry.group.pyspark.dependencies]
+pyspark = "^3.5.0"
+findspark = "^2.0.1"
+
+
+[tool.poetry.group.research.dependencies]
+matplotlib = "^3.8.1"
+seaborn = "^0.13.0"
+pandas = "^2.1.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
