@@ -59,3 +59,16 @@ Anti-Fraud System for Banking Operations
 
 ## Пункт 3
 ![](images/hdfs_data.png)
+
+# Задание 3
+
+## Пункт 4
+Весь анализ с комментариями написан в notebooks/eda.ipynb
+
+## Пункт 5
+Созданный скрипт находится в src/clean_data/clean_data.py
+
+## Пункт 6
+Очистка датасета приведена в конце ноутбука notebooks/eda.ipynb. Также там показан перенос в s3.
+Ссылка - https://console.cloud.yandex.ru/folders/b1gr2mj0gcd4qismd8kd/storage/buckets/mlops-otus-task2
+Бакет с parquet файлами - s3://mlops-otus-task2/processed_data/
