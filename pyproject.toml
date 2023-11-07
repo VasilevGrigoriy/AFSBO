@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "afsbo-project"
+name = "afsbo"
 version = "0.1.0"
 description = ""
 authors = ["VasilevGrigoriy <vasiliev-greg@mail.ru>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
+python = "^3.8"
 
 
 [tool.poetry.group.pyspark.dependencies]
@@ -15,9 +15,17 @@ findspark = "^2.0.1"
 
 
 [tool.poetry.group.research.dependencies]
-matplotlib = "^3.8.1"
+matplotlib = "^3.0"
 seaborn = "^0.13.0"
-pandas = "^2.1.2"
+pandas = "^1.5"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.26.0"
+
+
+[tool.poetry.group.logs.dependencies]
+tqdm = "^4.66.1"
 
 [build-system]
 requires = ["poetry-core"]

@@ -49,6 +49,9 @@ def clear_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     # Удаляем коррелирующие столбцы
     dataframe = dataframe.drop(*["tx_fraud", "tx_time_days"])
 
+    # Удалим выбросы по terminal_id перед кастами
+    dataframe = dataframe.filter(dataframe.terminal_id != "")
+
     # Правим типы, а также название столбца tranaction_id
     types = {
         "transaction_id": dataframe["tranaction_id"].cast(IntegerType()),
@@ -66,11 +69,12 @@ def clear_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     dataframe = dataframe.drop("tranaction_id")
 
     # Удаляем выбросы
+    lower_amount = dataframe.approxQuantile("tx_amount", [0.05], 0.2)[0]
+    upper_amount = dataframe.approxQuantile("tx_amount", [0.95], 0.2)[0]
     dataframe = dataframe.filter(
         (dataframe.customer_id != -999_999)
-        & (dataframe.terminal_id != "")
-        & (dataframe.tx_amount >= dataframe.approxQuantile("tx_amount", [0.05], 0.0)[0])
-        & (dataframe.tx_amount <= dataframe.approxQuantile("tx_amount", [0.95], 0.0)[0])
+        & (dataframe.tx_amount >= lower_amount)
+        & (dataframe.tx_amount <= upper_amount)
     )
     return dataframe
 
