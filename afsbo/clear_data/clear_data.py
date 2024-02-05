@@ -1,5 +1,6 @@
 import argparse
 import logging
+from tqdm import tqdm
 from pathlib import Path
 
 import findspark
@@ -79,7 +80,7 @@ def clear_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     return dataframe
 
 
-def main(path_to_file: Path, save_dir: Path):
+def main(files_dir: Path, save_dir: Path):
     logger.debug("Initializing spark session...")
     spark = (
         SparkSession.builder.appName("OTUS")
@@ -88,26 +89,30 @@ def main(path_to_file: Path, save_dir: Path):
         .config("spark.driver.memory", "4g")
         .getOrCreate()
     )
-    logger.debug("Reading data file...")
-    data = load_spark_dataset(spark, path_to_file)
-    logger.debug("Cleaning data file...")
-    data = clear_data(data)
+    files_paths = files_dir.rglob("*.txt")
+    for path_to_file in tqdm(
+        files_paths, desc="Processing files", total=len(files_paths)
+    ):
+        logger.debug("Reading data file...")
+        data = load_spark_dataset(spark, path_to_file.resolve())
+        logger.debug("Cleaning data file...")
+        data = clear_data(data)
 
-    save_dir.mkdir(exist_ok=True, parents=True)
-    data.write.parquet(str(save_dir / path_to_file.name))
-    logger.debug(f"Cleaned data saved in {str(save_dir / path_to_file.name)}")
+        save_dir.mkdir(exist_ok=True, parents=True)
+        data.write.parquet(str(save_dir / path_to_file.name))
+        logger.debug(f"Cleaned data saved in {str(save_dir / path_to_file.name)}")
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Script to clear dataset")
     parser.add_argument(
-        "--path_to_file",
+        "--files_dir",
         type=Path,
-        help="Path to .txt file with data",
+        help="Directory where .txt files with  data placed",
     )
     parser.add_argument(
         "--save_dir",
-        action=Path,
+        type=Path,
         help="Path to dir where file will be saved",
     )
     return parser.parse_args()
@@ -116,4 +121,4 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
 
-    main(args.path_to_file.resolve(), args.save_dir.resolve())
+    main(args.files_dir.resolve(), args.save_dir.resolve())
