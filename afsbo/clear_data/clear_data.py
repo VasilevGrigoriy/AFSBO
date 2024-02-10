@@ -2,6 +2,7 @@ import argparse
 import logging
 from tqdm import tqdm
 from pathlib import Path
+import datetime
 
 import findspark
 
@@ -15,6 +16,49 @@ from pyspark.sql.types import DoubleType, IntegerType, TimestampType, ShortType
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+file_names = [
+    "2019-08-22.txt",
+    "2019-09-21.txt",
+    "2019-10-21.txt",
+    "2019-11-20.txt",
+    "2019-12-20.txt",
+    "2020-01-19.txt",
+    "2020-02-18.txt",
+    "2020-03-19.txt",
+    "2020-04-18.txt",
+    "2020-05-18.txt",
+    "2020-06-17.txt",
+    "2020-07-17.txt",
+    "2020-08-16.txt",
+    "2020-09-15.txt",
+    "2020-10-15.txt",
+    "2020-11-14.txt",
+    "2020-12-14.txt",
+    "2021-01-13.txt",
+    "2021-02-12.txt",
+    "2021-03-14.txt",
+    "2021-04-13.txt",
+    "2021-05-13.txt",
+    "2021-06-12.txt",
+    "2021-07-12.txt",
+    "2021-08-11.txt",
+    "2021-09-10.txt",
+    "2021-10-10.txt",
+    "2021-11-09.txt",
+    "2021-12-09.txt",
+    "2022-01-08.txt",
+    "2022-02-07.txt",
+    "2022-03-09.txt",
+    "2022-04-08.txt",
+    "2022-05-08.txt",
+    "2022-06-07.txt",
+    "2022-07-07.txt",
+    "2022-08-06.txt",
+    "2022-09-05.txt",
+    "2022-10-05.txt",
+    "2022-11-04.txt",
+]
 
 
 def load_spark_dataset(spark, file_path: Path) -> pyspark.sql.DataFrame:
@@ -80,8 +124,13 @@ def clear_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     return dataframe
 
 
-def main(files_dir: Path, save_dir: Path):
+def get_full_path_by_name(file_name: str) -> str:
+    return f"s3a://mlops-otus-task2/raw_data/{file_name}"
+
+
+def main():
     logger.debug("Initializing spark session...")
+    time_now = str(datetime.datetime.now())
     spark = (
         SparkSession.builder.appName("OTUS")
         .config("spark.dynamicAllocation.enabled", "true")
@@ -89,36 +138,17 @@ def main(files_dir: Path, save_dir: Path):
         .config("spark.driver.memory", "4g")
         .getOrCreate()
     )
-    files_paths = files_dir.rglob("*.txt")
-    for path_to_file in tqdm(
-        files_paths, desc="Processing files", total=len(files_paths)
-    ):
+    for file_name in tqdm(file_names, desc="Processing files", total=len(file_names)):
+        file_path = get_full_path_by_name(file_name)
         logger.debug("Reading data file...")
-        data = load_spark_dataset(spark, path_to_file.resolve())
+        data = load_spark_dataset(spark, file_path)
         logger.debug("Cleaning data file...")
         data = clear_data(data)
 
-        save_dir.mkdir(exist_ok=True, parents=True)
-        data.write.parquet(str(save_dir / path_to_file.name))
-        logger.debug(f"Cleaned data saved in {str(save_dir / path_to_file.name)}")
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="Script to clear dataset")
-    parser.add_argument(
-        "--files_dir",
-        type=Path,
-        help="Directory where .txt files with  data placed",
-    )
-    parser.add_argument(
-        "--save_dir",
-        type=Path,
-        help="Path to dir where file will be saved",
-    )
-    return parser.parse_args()
+        save_path = f"s3a://mlops-otus-task2/processed_data/{time_now}_{file_name}"
+        data.write.parquet(save_path)
+        logger.debug(f"Cleaned data saved in {save_path}")
 
 
 if __name__ == "__main__":
-    args = parse_args()
-
-    main(args.files_dir.resolve(), args.save_dir.resolve())
+    main()
