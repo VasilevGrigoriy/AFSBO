@@ -3,12 +3,17 @@ import argparse
 import logging
 from typing import Tuple
 
+import sys
+
+sys.path.append("/opt/airflow/afsbo/tools/")
+sys.path.append("/opt/airflow/afsbo/")
+
 from dotenv import load_dotenv
 from pathlib import Path
 from tqdm import tqdm
 
-from afsbo.tools.s3_client import make_s3_client_from_credentials
-from afsbo.utils import init_basic_logger
+from s3_client import make_s3_client_from_credentials
+from utils import init_basic_logger
 
 load_dotenv()
 
@@ -30,6 +35,8 @@ def main(bucket_name: str, data_folder: str, save_dir: Path):
     data_objects = s3_client.list_folder_object(data_folder)
     logger.debug("Found %s objects in bucket folder", len(data_objects))
 
+    if isinstance(save_dir, str):
+        save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
     for object in tqdm(
         data_objects, total=len(data_objects), desc="Downloading files", leave=False

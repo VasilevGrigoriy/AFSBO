@@ -3,12 +3,17 @@ import argparse
 import logging
 from typing import Tuple
 
+import sys
+
+sys.path.append("/opt/airflow/afsbo/tools/")
+sys.path.append("/opt/airflow/afsbo/")
+
 from dotenv import load_dotenv
 from pathlib import Path
 from tqdm import tqdm
 
-from afsbo.tools.s3_client import get_s3_resource, check_bucket_access, S3Client
-from afsbo.utils import init_basic_logger
+from s3_client import get_s3_resource, check_bucket_access, S3Client
+from utils import init_basic_logger
 
 load_dotenv()
 
@@ -23,6 +28,8 @@ def get_s3_credentials_from_env() -> Tuple[str, str, str]:
 
 def main(bucket_name: str, upload_folder: str, files_dir: Path):
     logger = init_basic_logger(__name__, logging.DEBUG)
+    if isinstance(files_dir, str):
+        files_dir = Path(files_dir)
 
     resourse = get_s3_resource(*get_s3_credentials_from_env())
     if not check_bucket_access(resourse, bucket_name):
