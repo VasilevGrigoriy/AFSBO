@@ -1,13 +1,16 @@
 import logging
 import sys
 
+sys.path.append("/opt/airflow/afsbo/scripts/")
+
 import airflow
 from datetime import timedelta
 from airflow import DAG
 
 # from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
-from airflow.operators.bash import BashOperator
-from airflow.utils.dates import days_ago
+from airflow.operators.python import PythonOperator
+from load_data_from_s3 import main as load_data_from_s3
+from push_data_to_s3 import main as push_data_to_s3
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -19,7 +22,7 @@ logger.addHandler(handler)
 
 default_args = {
     "owner": "airflow",
-    # "start_date": airflow.utils.dates.days_ago(2),
+    "start_date": airflow.utils.dates.days_ago(1),
     # "end_date": datetime(),
     "depends_on_past": True,
     "email": ["vasiliev-gregmail.ru"],
@@ -29,22 +32,12 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-
 dag_spark = DAG(
-    dag_id="ClearDataSpark",
+    dag_id="aaaa",
     default_args=default_args,
     schedule_interval="0 0 * * *",
     dagrun_timeout=timedelta(minutes=10),
     description="Clear data from s3 using spark script",
-)
-
-
-logger.debug("pull raw data from s3 to local")
-pull_data_from_s3 = BashOperator(
-    task_id="upload_data_from_s3",
-    bash_command="python3 /opt/airflow/afsbo/scripts/load_data_from_s3.py --bucket_name mlops-otus-task2 --data_folder test --save_dir uploaded_data/",
-    dag=dag_spark,
-    run_as_user="VasilevGrigoriy",
 )
 
 # logger.debug("process data with spark clear script")
@@ -54,14 +47,3 @@ pull_data_from_s3 = BashOperator(
 #     conn_id="spark_local",
 #     dag=dag_spark,
 # )
-
-logger.debug("push processed data to s3")
-push_data_to_s3 = BashOperator(
-    task_id="upload_data_from_s3",
-    bash_command="python3 /opt/airflow/afsbo/scripts/push_data_to_s3.py --bucket_name mlops-otus-task2 --upload_folder test_processed_data --files_dir processed_data/",
-    dag=dag_spark,
-    run_as_user="VasilevGrigoriy",
-)
-
-# pull_data_from_s3 >> clear_spark_locals >> push_data_to_s3
-pull_data_from_s3 >> push_data_to_s3
