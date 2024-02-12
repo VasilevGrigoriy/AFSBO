@@ -5,7 +5,12 @@ from typing import Union, List
 import boto3
 import botocore
 
-from afsbo.utils import init_basic_logger
+import sys
+
+sys.path.append("/opt/airflow/afsbo/tools/")
+sys.path.append("/opt/airflow/afsbo/")
+
+from utils import init_basic_logger
 
 logging.getLogger("boto3").setLevel(logging.CRITICAL)
 logging.getLogger("botocore").setLevel(logging.CRITICAL)
