@@ -1,8 +1,9 @@
 import argparse
+import datetime
 import logging
+import sys
 from tqdm import tqdm
 from pathlib import Path
-import datetime
 
 import findspark
 
@@ -16,8 +17,13 @@ from pyspark.sql.types import DoubleType, IntegerType, TimestampType, ShortType
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(stream=sys.stdout)
+handler.setFormatter(
+    logging.Formatter(fmt="[%(asctime)s: %(levelname)s %(name)s] %(message)s")
+)
+logger.addHandler(handler)
 
-file_names = [
+FILENAMES = [
     "2019-08-22.txt",
     "2019-09-21.txt",
     "2019-10-21.txt",
@@ -124,8 +130,8 @@ def clear_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     return dataframe
 
 
-def get_full_path_by_name(file_name: str) -> str:
-    return f"s3a://mlops-otus-task2/raw_data/{file_name}"
+def get_full_path_by_name(filename: str) -> str:
+    return f"s3a://mlops-otus-task2/raw_data/{filename}"
 
 
 def main():
@@ -138,16 +144,21 @@ def main():
         .config("spark.driver.memory", "4g")
         .getOrCreate()
     )
-    for file_name in tqdm(file_names, desc="Processing files", total=len(file_names)):
-        file_path = get_full_path_by_name(file_name)
-        logger.debug("Reading data file...")
-        data = load_spark_dataset(spark, file_path)
-        logger.debug("Cleaning data file...")
-        data = clear_data(data)
+    for filename in tqdm(FILENAMES, desc="Processing files", total=len(FILENAMES)):
+        filepath = get_full_path_by_name(filename)
+        try:
+            logger.debug("Reading data file...")
+            data = load_spark_dataset(spark, filepath)
+            logger.debug("Cleaning data file...")
+            data = clear_data(data)
 
-        save_path = f"s3a://mlops-otus-task2/processed_data/{time_now}_{file_name}"
-        data.write.parquet(save_path)
-        logger.debug(f"Cleaned data saved in {save_path}")
+            save_path = (
+                f"s3a://mlops-otus-task2/processed_data/{time_now}_{filename[:-4]}"
+            )
+            data.write.parquet(save_path)
+            logger.debug(f"Cleaned data saved in {save_path}")
+        except Exception as e:
+            logger.debug(f"Problems with file {filename}. Error: {str(e)}")
 
 
 if __name__ == "__main__":
