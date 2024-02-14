@@ -72,3 +72,17 @@ Anti-Fraud System for Banking Operations
 Очистка датасета приведена в конце ноутбука notebooks/eda.ipynb. Также там показан перенос в s3.
 Ссылка - https://console.cloud.yandex.ru/folders/b1gr2mj0gcd4qismd8kd/storage/buckets/mlops-otus-task2
 Бакет с parquet файлами - s3://mlops-otus-task2/processed_data/
+
+# Задание 4
+
+## Пункт 1
+Для создания airflow использую Dockerfile и docker-compose.yml. 
+
+## Пункт 2, 3 
+Создал dag для очистки данных, поставил его на переодичность в 5 часов. Все загружается корревктно. Находтся в папке dags.
+
+## Пункт 4
+Dag запускается с переодичностью в 5 часов. Прикладываю подтверждение работы (один красный даг - это я случайно триггернул даг, он упал по таймауту, пока стоял в очереди на выполнение. Все по расписанию отработали).
+![](images/airflow.png)
+
+Также можно видеть, что в бакете появляются обновленные данные по этой [ссылке](https://console.cloud.yandex.ru/folders/b1gr2mj0gcd4qismd8kd/storage/buckets/mlops-otus-task2?key=processed_data%2F): они имеют вид <дата очистки>_<название файла>.txt.
