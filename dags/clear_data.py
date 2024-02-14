@@ -1,49 +1,36 @@
-import logging
-import sys
-
-sys.path.append("/opt/airflow/afsbo/scripts/")
-
 import airflow
 from datetime import timedelta
 from airflow import DAG
+from airflow.utils.dates import days_ago
 
-# from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
-from airflow.operators.python import PythonOperator
-from load_data_from_s3 import main as load_data_from_s3
-from push_data_to_s3 import main as push_data_to_s3
+from airflow.providers.ssh.operators.ssh import SSHOperator
+from airflow.providers.ssh.hooks.ssh import SSHHook
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler(stream=sys.stdout)
-handler.setFormatter(
-    logging.Formatter(fmt="[%(asctime)s: %(levelname)s %(name)s] %(message)s")
-)
-logger.addHandler(handler)
+sshHook = SSHHook(ssh_conn_id="better_spark", cmd_timeout=18000, conn_timeout=18000)
 
 default_args = {
     "owner": "airflow",
-    "start_date": airflow.utils.dates.days_ago(1),
-    # "end_date": datetime(),
     "depends_on_past": True,
-    "email": ["vasiliev-gregmail.ru"],
-    "email_on_failure": True,
-    "email_on_retry": True,
+    "email": ["vasiliev-greg@mail.ru"],
+    "email_on_failure": False,
+    "email_on_retry": False,
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
 }
 
-dag_spark = DAG(
-    dag_id="aaaa",
+with DAG(
+    dag_id="clean-data-with-spark-cluster",
     default_args=default_args,
-    schedule_interval="0 0 * * *",
-    dagrun_timeout=timedelta(minutes=10),
+    start_date=days_ago(0),
+    schedule_interval="0 */5 * * *",
+    dagrun_timeout=timedelta(hours=5),
     description="Clear data from s3 using spark script",
-)
+) as dag:
 
-# logger.debug("process data with spark clear script")
-# clear_spark_locals = SparkSubmitOperator(
-#     task_id="clear_datafiles_with_spark",
-#     application="python3 /opt/airflow/afsbo/clear_data/clear_data.py --files_dir uploaded_data/ --save_dir processed_data/",
-#     conn_id="spark_local",
-#     dag=dag_spark,
-# )
+    run_this = SSHOperator(
+        task_id="clear-data",
+        command="cd project/ && pip install -r requirements.txt && python3 afsbo/clear_data/clear_data.py",
+        ssh_hook=sshHook,
+    )
+
+run_this
