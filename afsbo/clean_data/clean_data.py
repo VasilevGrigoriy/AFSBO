@@ -92,7 +92,7 @@ def load_spark_dataset(spark, file_path: Path) -> pyspark.sql.DataFrame:
     return data
 
 
-def clear_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
+def clean_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     # Создадим копию, делаем преобразования на копии
     dataframe = spark_dataframe.alias("dataframe")
 
@@ -149,7 +149,7 @@ def main():
             logger.debug("Reading data file...")
             data = load_spark_dataset(spark, filepath)
             logger.debug("Cleaning data file...")
-            data = clear_data(data)
+            data = clean_data(data)
 
             save_path = (
                 f"s3a://mlops-otus-task2/processed_data/{time_now}_{filename[:-4]}"
