@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-import airflow
 from airflow import DAG
 from airflow.providers.ssh.hooks.ssh import SSHHook
 from airflow.providers.ssh.operators.ssh import SSHOperator
