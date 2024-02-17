@@ -2,10 +2,10 @@ import argparse
 import datetime
 import logging
 import sys
-from tqdm import tqdm
 from pathlib import Path
 
 import findspark
+from tqdm import tqdm
 
 findspark.init()
 findspark.find()
@@ -13,7 +13,7 @@ findspark.find()
 import pyspark
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as f
-from pyspark.sql.types import DoubleType, IntegerType, TimestampType, ShortType
+from pyspark.sql.types import DoubleType, IntegerType, ShortType, TimestampType
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

@@ -1,11 +1,10 @@
 import logging
+import sys
 from pathlib import Path
-from typing import Union, List
+from typing import List, Union
 
 import boto3
 import botocore
-
-import sys
 
 sys.path.append("/opt/airflow/afsbo/tools/")
 sys.path.append("/opt/airflow/afsbo/")

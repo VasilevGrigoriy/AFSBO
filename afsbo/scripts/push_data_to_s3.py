@@ -1,18 +1,17 @@
-import os
 import argparse
 import logging
-from typing import Tuple
-
+import os
 import sys
+from typing import Tuple
 
 sys.path.append("/opt/airflow/afsbo/tools/")
 sys.path.append("/opt/airflow/afsbo/")
 
-from dotenv import load_dotenv
 from pathlib import Path
-from tqdm import tqdm
 
-from s3_client import get_s3_resource, check_bucket_access, S3Client
+from dotenv import load_dotenv
+from s3_client import S3Client, check_bucket_access, get_s3_resource
+from tqdm import tqdm
 from utils import init_basic_logger
 
 load_dotenv()

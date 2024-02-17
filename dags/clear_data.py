@@ -1,10 +1,10 @@
-import airflow
 from datetime import timedelta
-from airflow import DAG
-from airflow.utils.dates import days_ago
 
-from airflow.providers.ssh.operators.ssh import SSHOperator
+import airflow
+from airflow import DAG
 from airflow.providers.ssh.hooks.ssh import SSHHook
+from airflow.providers.ssh.operators.ssh import SSHOperator
+from airflow.utils.dates import days_ago
 
 sshHook = SSHHook(ssh_conn_id="better_spark", cmd_timeout=18000, conn_timeout=18000)
 
