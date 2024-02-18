@@ -1,6 +1,5 @@
 import logging
 import os
-from datetime import date, datetime, timedelta
 from functools import reduce
 from pathlib import Path
 
@@ -18,38 +17,17 @@ from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import dayofweek, hour, minute, month
 
-from afsbo.clean_data.clean_data import process_file
 from afsbo.utils import init_basic_logger
 
 load_dotenv("../../.env")
 
 logger = init_basic_logger("training models", logging.DEBUG)
 
-# Эмулируем последовательно поступающие данные
-if "DATE" not in os.environ:
-    os.environ["DATE"] = "1999-01-01"
-CURRENT_DATE = date.fromisoformat(os.environ.get("DATE"))
-# Обновляем дату на следующий день
-os.environ["DATE"] = os.environ["DATE"] + timedelta(days=1)
-
 MLFLOW_TRACKING_SERVER_HOST = os.environ.get("MLFLOW_TRACKING_SERVER_HOST")
 MLFLOW_PORT = os.environ.get("MLFLOW_PORT")
 
 findspark.init()
 findspark.find()
-
-
-def get_new_datafile_name(files_folder: Path) -> str:
-    dates_update = [
-        date.fromisoformat(str(filename.name)[:-4])
-        for filename in files_folder.rglob("*.txt")
-    ]
-    new_file_date = sorted([date_ for date_ in dates_update if date_ >= CURRENT_DATE])[
-        0
-    ]
-    new_filename = str(new_file_date) + ".txt"
-    logger.debug("Found new datafile %s", new_filename)
-    return new_filename
 
 
 def load_full_dataset(
@@ -134,12 +112,6 @@ def train(
 
 @click.command()
 @click.option(
-    "--s3_raw_files_folder",
-    default="s3a://mlops-otus-task2/raw_data/",
-    type=Path,
-    help="Path to folder with raw data in s3",
-)
-@click.option(
     "--s3_processed_files_folder",
     default="s3a://mlops-otus-task2/processed_data/",
     type=Path,
@@ -164,29 +136,18 @@ def train(
     help="Model name in mlflow artifact to save",
 )
 def main(
-    s3_raw_files_folder: Path,
     s3_processed_files_folder: Path,
     experiment_name: str,
     run_name: str,
     model_artifact_name: str,
 ):
     logger.debug("Initializing spark session")
-    time_done = str(datetime.now())
     spark = (
         SparkSession.builder.appName("OTUS")
         .config("spark.dynamicAllocation.enabled", "true")
         .config("spark.executor.memory", "30g")
         .config("spark.driver.memory", "30g")
         .getOrCreate()
-    )
-    filename_to_process = get_new_datafile_name(s3_raw_files_folder)
-    logger.debug("Clean new file %s", filename_to_process)
-    process_file(
-        filename_to_process,
-        s3_raw_files_folder,
-        s3_processed_files_folder,
-        spark,
-        time_done,
     )
 
     # Теперь открываем все файлы, мерджим их и обучаем на этих данных
