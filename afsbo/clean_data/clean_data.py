@@ -4,15 +4,11 @@ import sys
 from pathlib import Path
 
 import findspark
-from tqdm import tqdm
-
-findspark.init()
-findspark.find()
-
 import pyspark
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as f
 from pyspark.sql.types import DoubleType, IntegerType, ShortType, TimestampType
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -64,6 +60,9 @@ FILENAMES = [
     "2022-10-05.txt",
     "2022-11-04.txt",
 ]
+
+findspark.init()
+findspark.find()
 
 
 def load_spark_dataset(spark, file_path: Path) -> pyspark.sql.DataFrame:
@@ -129,35 +128,45 @@ def clean_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     return dataframe
 
 
-def get_full_path_by_name(filename: str) -> str:
-    return f"s3a://mlops-otus-task2/raw_data/{filename}"
+def process_file(
+    filename: str,
+    s3_raw_files_folder: str,
+    s3_processed_files_folder: str,
+    spark: SparkSession,
+    time_done: str,
+) -> None:
+    filepath = s3_raw_files_folder + filename
+    try:
+        logger.debug("Reading data file...")
+        data = load_spark_dataset(spark, filepath)
+        logger.debug("Cleaning data file...")
+        data = clean_data(data)
+
+        save_path = s3_processed_files_folder + f"{time_done}_{filename[:-4]}"
+        data.write.parquet(save_path)
+        logger.debug(f"Cleaned data saved in {save_path}")
+    except Exception as e:
+        logger.debug(f"Problems with file {filename}. Error: {str(e)}")
 
 
 def main():
     logger.debug("Initializing spark session...")
-    time_now = str(datetime.datetime.now())
+    time_done = str(datetime.datetime.now())
     spark = (
         SparkSession.builder.appName("OTUS")
         .config("spark.dynamicAllocation.enabled", "true")
-        .config("spark.executor.memory", "4g")
-        .config("spark.driver.memory", "4g")
+        .config("spark.executor.memory", "10g")
+        .config("spark.driver.memory", "10g")
         .getOrCreate()
     )
     for filename in tqdm(FILENAMES, desc="Processing files", total=len(FILENAMES)):
-        filepath = get_full_path_by_name(filename)
-        try:
-            logger.debug("Reading data file...")
-            data = load_spark_dataset(spark, filepath)
-            logger.debug("Cleaning data file...")
-            data = clean_data(data)
-
-            save_path = (
-                f"s3a://mlops-otus-task2/processed_data/{time_now}_{filename[:-4]}"
-            )
-            data.write.parquet(save_path)
-            logger.debug(f"Cleaned data saved in {save_path}")
-        except Exception as e:
-            logger.debug(f"Problems with file {filename}. Error: {str(e)}")
+        process_file(
+            filename,
+            "s3a://mlops-otus-task2/raw_data/",
+            "s3a://mlops-otus-task2/processed_data/",
+            spark,
+            time_done,
+        )
 
 
 if __name__ == "__main__":
