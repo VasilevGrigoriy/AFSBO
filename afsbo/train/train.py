@@ -215,18 +215,20 @@ def main(
         target = "tx_fraud_scenario"
         cross_validation_results = train(dataset, features, target, "features")
 
-        best_regParam = cross_validation_results.bestModel.stages[-1].getRegParam()
-        best_fitIntercept = cross_validation_results.bestModel.stages[
-            -1
-        ].getFitIntercept()
-        best_elasticNetParam = cross_validation_results.bestModel.stages[
-            -1
-        ].getElasticNetParam()
+        best_regParam = round(
+            cross_validation_results.bestModel.stages[-1].getRegParam(), 5
+        )
+        best_fitIntercept = round(
+            cross_validation_results.bestModel.stages[-1].getFitIntercept(), 5
+        )
+        best_elasticNetParam = round(
+            cross_validation_results.bestModel.stages[-1].getElasticNetParam(), 5
+        )
 
         # Логгируем лучшие параметры
-        logger.debug("Best regParam - %s", round(best_regParam, 4))
-        logger.debug("Best fitIntercept - %s", round(best_fitIntercept, 4))
-        logger.debug("Best elasticNetParam - %s", round(best_elasticNetParam, 4))
+        logger.debug("Best regParam - %s", best_regParam)
+        logger.debug("Best fitIntercept - %s", best_fitIntercept)
+        logger.debug("Best elasticNetParam - %s", best_elasticNetParam)
 
         mlflow.log_param("optimal_regParam", best_regParam)
         mlflow.log_param("optimal_fitIntercept", best_fitIntercept)
