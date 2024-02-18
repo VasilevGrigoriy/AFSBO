@@ -39,7 +39,7 @@ black = "^24.1.1"
 isort = "^5.13.2"
 
 [tool.poetry.group.airflow.dependencies]
-apache-airflow = {version = "^2.8.1", optional = true}
+apache-airflow = "^2.8.1"
 apache-airflow-providers-google = "^10.14.0"
 
 
