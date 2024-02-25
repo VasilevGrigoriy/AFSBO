@@ -134,7 +134,10 @@ def get_raw_filenames_by_date(
 
 
 def get_processed_filenames(files_folder: str) -> List[str]:
-    return [os.path.basename(filename) for filename in glob(files_folder + "*.parquet", recursive=True)]
+    return [
+        os.path.basename(filename)
+        for filename in glob(files_folder + "*.parquet", recursive=True)
+    ]
 
 
 @click.command()
