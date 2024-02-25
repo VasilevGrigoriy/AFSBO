@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 from pathlib import Path
+from typing import List
 
 import click
 import findspark
@@ -115,7 +116,7 @@ def process_file(
 
 def get_raw_filenames_by_date(
     files_folder: Path, current_date: datetime.date
-) -> list[str]:
+) -> List[str]:
     dates_update = [
         datetime.date.fromisoformat(str(filename.name)[:-4])
         for filename in files_folder.rglob("*.txt")
@@ -130,7 +131,7 @@ def get_raw_filenames_by_date(
     return raw_files
 
 
-def get_processed_filenames(files_folder: Path) -> list[str]:
+def get_processed_filenames(files_folder: Path) -> List[str]:
     return [str(filename.name) for filename in files_folder.glob("*.parquet")]
 
 

@@ -2,6 +2,7 @@ import logging
 import os
 from functools import reduce
 from pathlib import Path
+from typing import List
 
 import click
 import findspark
@@ -70,7 +71,7 @@ def data_enrichment(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataF
 
 def transform_dataset_to_evaluation(
     dataset: pyspark.sql.DataFrame,
-    features: list[str],
+    features: List[str],
     features_col_name: str,
 ) -> Pipeline:
     assembler = VectorAssembler(inputCols=features, outputCol=features_col_name)
@@ -80,11 +81,11 @@ def transform_dataset_to_evaluation(
 
 def train(
     dataset: pyspark.sql.DataFrame,
-    features: list[str],
+    features: List[str],
     target: str,
     features_colname: str,
-    reg_param_grid: list[float] = [0.0, 0.01, 0.05, 0.1, 0.3],
-    elastic_param_grid: list[float] = [0.1, 0.5, 1.0],
+    reg_param_grid: List[float] = [0.0, 0.01, 0.05, 0.1, 0.3],
+    elastic_param_grid: List[float] = [0.1, 0.5, 1.0],
 ):
     logger.debug("Start training model in cross-validation mode")
     dataset = transform_dataset_to_evaluation(dataset, features, features_colname)
