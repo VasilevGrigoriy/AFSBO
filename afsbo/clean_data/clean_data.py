@@ -12,6 +12,10 @@ from pyspark.sql import functions as f
 from pyspark.sql.types import DoubleType, IntegerType, ShortType, TimestampType
 from tqdm import tqdm
 
+from afsbo.scripts.load_data_from_s3 import get_s3_credentials_from_env
+from afsbo.scripts.load_data_from_s3 import main as load_data_from_s3
+from afsbo.scripts.push_data_to_s3 import main as push_data_to_s3
+from afsbo.tools.s3_client import S3Client, make_s3_client_from_credentials
 from afsbo.utils import init_basic_logger
 
 logger = init_basic_logger(__name__, logging.DEBUG)
@@ -94,20 +98,25 @@ def clean_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     return dataframe
 
 
+def get_full_path(bucket: str, folder: str, filename: str) -> str:
+    return f"s3a://{bucket}/{folder}/{filename}"
+
+
 def process_file(
+    bucket: str,
     filename: str,
     s3_raw_files_folder: str,
     s3_processed_files_folder: str,
     spark: SparkSession,
 ) -> None:
-    filepath = s3_raw_files_folder + filename
+    filepath = get_full_path(bucket, s3_raw_files_folder, filename)
     try:
         logger.debug("Reading data file...")
         data = load_spark_dataset(spark, filepath)
         logger.debug("Cleaning data file...")
         data = clean_data(data)
 
-        save_path = s3_processed_files_folder + filename[:-4]
+        save_path = get_full_path(bucket, s3_processed_files_folder, filename[:-4])
         data.write.parquet(save_path)
         logger.debug(f"Cleaned data saved in {save_path}")
     except Exception as e:
@@ -115,12 +124,11 @@ def process_file(
 
 
 def get_raw_filenames_by_date(
-    files_folder: str, current_date: datetime.date
+    s3_client: S3Client, files_folder: str, current_date: datetime.date
 ) -> List[str]:
-    logger.debug("Searching for raw data in %s", files_folder)
     dates_update = [
-        datetime.date.fromisoformat(os.path.basename(filename)[:-4])
-        for filename in glob(files_folder + "*.txt", recursive=True)
+        datetime.date.fromisoformat(filename[:-4])
+        for filename in s3_client.list_folder_object(files_folder)
     ]
     logger.debug("Found raw files dates - %s", dates_update)
     raw_files = [str(date_) + ".txt" for date_ in dates_update if date_ <= current_date]
@@ -133,27 +141,33 @@ def get_raw_filenames_by_date(
     return raw_files
 
 
-def get_processed_filenames(files_folder: str) -> List[str]:
+def get_processed_filenames(s3_client: S3Client, files_folder: str) -> List[str]:
     return [
-        os.path.basename(filename)
-        for filename in glob(files_folder + "*.parquet", recursive=True)
+        filename.split(".")[0] + ".txt"
+        for filename in s3_client.list_folder_object(files_folder)
     ]
 
 
 @click.command()
 @click.option(
-    "--s3_raw_files_folder",
-    default="s3a://mlops-otus-task2/raw_data/",
+    "--s3_bucket_name",
+    default="mlops-otus-task2",
     type=str,
-    help="Path str to folder with raw data in s3",
+    help="Folder in bucket with raw data",
+)
+@click.option(
+    "--s3_raw_files_folder",
+    default="raw_data",
+    type=str,
+    help="Folder in bucket with raw data",
 )
 @click.option(
     "--s3_processed_files_folder",
-    default="s3a://mlops-otus-task2/processed_data/",
+    default="processed_data",
     type=str,
-    help="Path str to folder with already processed data in s3",
+    help="Folder in bucket with processed data",
 )
-def main(s3_raw_files_folder: str, s3_processed_files_folder: str):
+def main(s3_bucket_name: str, s3_raw_files_folder: str, s3_processed_files_folder: str):
     logger.debug("Initializing spark session")
     spark = (
         SparkSession.builder.appName("OTUS")
@@ -162,8 +176,14 @@ def main(s3_raw_files_folder: str, s3_processed_files_folder: str):
         .config("spark.driver.memory", "30g")
         .getOrCreate()
     )
-    raw_filenames = get_raw_filenames_by_date(s3_raw_files_folder, CURRENT_DATE)
-    processed_filenames = get_processed_filenames(s3_processed_files_folder)
+
+    s3_client = make_s3_client_from_credentials(
+        *get_s3_credentials_from_env(), s3_bucket_name
+    )
+    raw_filenames = get_raw_filenames_by_date(
+        s3_client, s3_raw_files_folder, CURRENT_DATE
+    )
+    processed_filenames = get_processed_filenames(s3_client, s3_processed_files_folder)
     filenames_to_process = [
         filename for filename in raw_filenames if filename not in processed_filenames
     ]
@@ -177,6 +197,7 @@ def main(s3_raw_files_folder: str, s3_processed_files_folder: str):
         filenames_to_process, desc="Processing files", total=len(filenames_to_process)
     ):
         process_file(
+            bucket_name,
             filename,
             s3_raw_files_folder,
             s3_processed_files_folder,
