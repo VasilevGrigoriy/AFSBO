@@ -18,7 +18,7 @@ logger = init_basic_logger(__name__, logging.DEBUG)
 
 # Эмулируем последовательно поступающие данные
 if "DATE" not in os.environ:
-    os.environ["DATE"] = "2019-08-22"
+    os.environ["DATE"] = "2019-08-23"
 CURRENT_DATE = datetime.date.fromisoformat(os.environ.get("DATE"))
 logger.debug("Current date in system env - %s", str(CURRENT_DATE))
 # Обновляем дату на следующий месяц
@@ -121,6 +121,7 @@ def get_raw_filenames_by_date(
         datetime.date.fromisoformat(str(filename.name)[:-4])
         for filename in files_folder.rglob("*.txt")
     ]
+    logger.debug("Found raw files dates - %s", dates_update)
     raw_files = [str(date_) + ".txt" for date_ in dates_update if date_ <= current_date]
     logger.debug(
         "Found %s raw files in %s by date %s",
