@@ -10,9 +10,10 @@ sys.path.append("/opt/airflow/afsbo/")
 from pathlib import Path
 
 from dotenv import load_dotenv
-from s3_client import make_s3_client_from_credentials
 from tqdm import tqdm
-from utils import init_basic_logger
+
+from afsbo.s3_client import make_s3_client_from_credentials
+from afsbo.utils import init_basic_logger
 
 load_dotenv()
 
