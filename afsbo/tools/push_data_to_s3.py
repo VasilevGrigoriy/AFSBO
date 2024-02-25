@@ -12,7 +12,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from afsbo.s3_client import S3Client, check_bucket_access, get_s3_resource
+from afsbo.tools.s3_client import S3Client, check_bucket_access, get_s3_resource
 from afsbo.utils import init_basic_logger
 
 load_dotenv()

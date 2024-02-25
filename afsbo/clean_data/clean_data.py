@@ -12,9 +12,9 @@ from pyspark.sql import functions as f
 from pyspark.sql.types import DoubleType, IntegerType, ShortType, TimestampType
 from tqdm import tqdm
 
-from afsbo.scripts.load_data_from_s3 import get_s3_credentials_from_env
-from afsbo.scripts.load_data_from_s3 import main as load_data_from_s3
-from afsbo.scripts.push_data_to_s3 import main as push_data_to_s3
+from afsbo.tools.load_data_from_s3 import get_s3_credentials_from_env
+from afsbo.tools.load_data_from_s3 import main as load_data_from_s3
+from afsbo.tools.push_data_to_s3 import main as push_data_to_s3
 from afsbo.tools.s3_client import S3Client, make_s3_client_from_credentials
 from afsbo.utils import init_basic_logger
 
