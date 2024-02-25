@@ -5357,13 +5357,13 @@ tests = ["pytest"]
 
 [[package]]
 name = "py4j"
-version = "0.10.9.7"
+version = "0.10.9"
 description = "Enables Python programs to dynamically access arbitrary Java objects"
 optional = false
 python-versions = "*"
 files = [
-    {file = "py4j-0.10.9.7-py2.py3-none-any.whl", hash = "sha256:85defdfd2b2376eb3abf5ca6474b51ab7e0de341c75a02f46dc9b5976f5a5c1b"},
-    {file = "py4j-0.10.9.7.tar.gz", hash = "sha256:0b6e5315bb3ada5cf62ac651d107bb2ebc02def3dee9d9548e3baac644ea8dbb"},
+    {file = "py4j-0.10.9-py2.py3-none-any.whl", hash = "sha256:859ba728a7bb43e9c2bf058832759fb97a598bb28cc12f34f5fc4abdec08ede6"},
+    {file = "py4j-0.10.9.tar.gz", hash = "sha256:36ec57f43ff8ced260a18aa9a4e46c3500a730cac8860e259cbaa546c2b9db2f"},
 ]
 
 [[package]]
@@ -5642,23 +5642,21 @@ diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pyspark"
-version = "3.5.0"
+version = "3.0.2"
 description = "Apache Spark Python API"
 optional = false
-python-versions = ">=3.8"
+python-versions = "*"
 files = [
-    {file = "pyspark-3.5.0.tar.gz", hash = "sha256:d41a9b76bd2aca370a6100d075c029e22ba44c5940927877e9435a3a9c566558"},
+    {file = "pyspark-3.0.2.tar.gz", hash = "sha256:d4f2ced43394ad773f7b516a4bbcb5821a940462a17b1a25f175c83771b62ebc"},
 ]
 
 [package.dependencies]
-py4j = "0.10.9.7"
+py4j = "0.10.9"
 
 [package.extras]
-connect = ["googleapis-common-protos (>=1.56.4)", "grpcio (>=1.56.0)", "grpcio-status (>=1.56.0)", "numpy (>=1.15)", "pandas (>=1.0.5)", "pyarrow (>=4.0.0)"]
-ml = ["numpy (>=1.15)"]
-mllib = ["numpy (>=1.15)"]
-pandas-on-spark = ["numpy (>=1.15)", "pandas (>=1.0.5)", "pyarrow (>=4.0.0)"]
-sql = ["numpy (>=1.15)", "pandas (>=1.0.5)", "pyarrow (>=4.0.0)"]
+ml = ["numpy (>=1.7)"]
+mllib = ["numpy (>=1.7)"]
+sql = ["pandas (>=0.23.2)", "pyarrow (>=0.15.1)"]
 
 [[package]]
 name = "python-daemon"
@@ -7216,4 +7214,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "4de7d230c0e39c64b7a1022f8004950b74a56f3a87635ef02bb381d757ced43f"
+content-hash = "6ce9cf068b2b0c14b4109d8e68f1d8b0cdba5b4bf9a2da26dcb154ebd33ae930"
