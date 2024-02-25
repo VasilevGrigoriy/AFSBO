@@ -117,7 +117,6 @@ def process_file(
 def get_raw_filenames_by_date(
     files_folder: str, current_date: datetime.date
 ) -> List[str]:
-    logger.debug("Searching for raw data in %s", files_folder)
     dates_update = [
         datetime.date.fromisoformat(os.path.basename(filename)[:-4])
         for filename in glob(files_folder + "*.txt", recursive=True)
