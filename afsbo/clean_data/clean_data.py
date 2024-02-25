@@ -1,7 +1,7 @@
 import datetime
 import logging
 import os
-from pathlib import Path
+from glob import glob
 from typing import List
 
 import click
@@ -31,8 +31,8 @@ findspark.init()
 findspark.find()
 
 
-def load_spark_dataset(spark, file_path: Path) -> pyspark.sql.DataFrame:
-    data = spark.read.text(str(file_path))
+def load_spark_dataset(spark, file_path: str) -> pyspark.sql.DataFrame:
+    data = spark.read.text(file_path)
     name_cols = [
         "tranaction_id",
         "tx_datetime",
@@ -96,18 +96,18 @@ def clean_data(spark_dataframe: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
 
 def process_file(
     filename: str,
-    s3_raw_files_folder: Path,
-    s3_processed_files_folder: Path,
+    s3_raw_files_folder: str,
+    s3_processed_files_folder: str,
     spark: SparkSession,
 ) -> None:
-    filepath = str(s3_raw_files_folder) + filename
+    filepath = s3_raw_files_folder + filename
     try:
         logger.debug("Reading data file...")
         data = load_spark_dataset(spark, filepath)
         logger.debug("Cleaning data file...")
         data = clean_data(data)
 
-        save_path = str(s3_processed_files_folder) + filename[:-4]
+        save_path = s3_processed_files_folder + filename[:-4]
         data.write.parquet(save_path)
         logger.debug(f"Cleaned data saved in {save_path}")
     except Exception as e:
@@ -115,12 +115,12 @@ def process_file(
 
 
 def get_raw_filenames_by_date(
-    files_folder: Path, current_date: datetime.date
+    files_folder: str, current_date: datetime.date
 ) -> List[str]:
     logger.debug("Searching for raw data in %s", files_folder)
     dates_update = [
-        datetime.date.fromisoformat(str(filename.name)[:-4])
-        for filename in files_folder.rglob("*.txt")
+        datetime.date.fromisoformat(os.path.basename(filename)[:-4])
+        for filename in glob(files_folder + "*.txt", recursive=True)
     ]
     logger.debug("Found raw files dates - %s", dates_update)
     raw_files = [str(date_) + ".txt" for date_ in dates_update if date_ <= current_date]
@@ -133,24 +133,24 @@ def get_raw_filenames_by_date(
     return raw_files
 
 
-def get_processed_filenames(files_folder: Path) -> List[str]:
-    return [str(filename.name) for filename in files_folder.glob("*.parquet")]
+def get_processed_filenames(files_folder: str) -> List[str]:
+    return [os.path.basename(filename) for filename in glob(files_folder + "*.parquet", recursive=True)]
 
 
 @click.command()
 @click.option(
     "--s3_raw_files_folder",
     default="s3a://mlops-otus-task2/raw_data/",
-    type=Path,
-    help="Path to folder with raw data in s3",
+    type=str,
+    help="Path str to folder with raw data in s3",
 )
 @click.option(
     "--s3_processed_files_folder",
     default="s3a://mlops-otus-task2/processed_data/",
-    type=Path,
-    help="Path to folder with already processed data in s3",
+    type=str,
+    help="Path str to folder with already processed data in s3",
 )
-def main(s3_raw_files_folder: Path, s3_processed_files_folder: Path):
+def main(s3_raw_files_folder: str, s3_processed_files_folder: str):
     logger.debug("Initializing spark session")
     spark = (
         SparkSession.builder.appName("OTUS")
