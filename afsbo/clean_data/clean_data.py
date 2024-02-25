@@ -9,6 +9,7 @@ import findspark
 import pyspark
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as f
+from pathlib import Path
 from pyspark.sql.types import DoubleType, IntegerType, ShortType, TimestampType
 from tqdm import tqdm
 
@@ -103,24 +104,22 @@ def get_full_path(bucket: str, folder: str, filename: str) -> str:
 
 
 def process_file(
-    bucket: str,
-    filename: str,
-    s3_raw_files_folder: str,
-    s3_processed_files_folder: str,
+    processed_dir: Path,
+    filepath: Path,
     spark: SparkSession,
 ) -> None:
-    filepath = get_full_path(bucket, s3_raw_files_folder, filename)
+    logger.debug("Read data from %s", filepath)
     try:
         logger.debug("Reading data file...")
-        data = load_spark_dataset(spark, filepath)
+        data = load_spark_dataset(spark, str(filepath))
         logger.debug("Cleaning data file...")
         data = clean_data(data)
 
-        save_path = get_full_path(bucket, s3_processed_files_folder, filename[:-4])
+        save_path = processed_dir / str(filepath.name)[:-4]
         data.write.parquet(save_path)
         logger.debug(f"Cleaned data saved in {save_path}")
     except Exception as e:
-        logger.debug(f"Problems with file {filename}. Error: {str(e)}")
+        logger.debug(f"Problems with file {filepath}. Error: {str(e)}")
 
 
 def get_raw_filenames_by_date(
@@ -147,13 +146,22 @@ def get_processed_filenames(s3_client: S3Client, files_folder: str) -> List[str]
         for filename in s3_client.list_folder_object(files_folder)
     ]
 
+def download_files(s3_client: S3Client, artifacts_path: Path, filenames_to_download: List[str], folder: str) -> List[str]:
+    for filename in filenames_to_download:
+        s3_client.download_file(f"{folder}/{filename}", artifacts_path / filename)
+
+    return list(artifacts_path.rglob("*.txt"))
+
+def upload_files(s3_client: S3Client, filenames_to_upload: List[Path], folder: str) -> None:
+    for filename in filenames_to_upload:
+        s3_client.upload_file(filename, f"{folder}/{filename.name}")
 
 @click.command()
 @click.option(
     "--s3_bucket_name",
     default="mlops-otus-task2",
     type=str,
-    help="Folder in bucket with raw data",
+    help="Bucket name in s3",
 )
 @click.option(
     "--s3_raw_files_folder",
@@ -163,11 +171,17 @@ def get_processed_filenames(s3_client: S3Client, files_folder: str) -> List[str]
 )
 @click.option(
     "--s3_processed_files_folder",
-    default="processed_data",
+    default="new_processed_data",
     type=str,
     help="Folder in bucket with processed data",
 )
-def main(s3_bucket_name: str, s3_raw_files_folder: str, s3_processed_files_folder: str):
+@click.option(
+    "--artifacts_path",
+    default="/home/ubuntu/artifacts/",
+    type=Path,
+    help="Folder where temp files will be added"
+)
+def main(s3_bucket_name: str, s3_raw_files_folder: str, s3_processed_files_folder: str, artifacts_path: Path):
     logger.debug("Initializing spark session")
     spark = (
         SparkSession.builder.appName("OTUS")
@@ -187,22 +201,26 @@ def main(s3_bucket_name: str, s3_raw_files_folder: str, s3_processed_files_folde
     filenames_to_process = [
         filename for filename in raw_filenames if filename not in processed_filenames
     ]
+    raw_datadir = artifacts_path / "raw_data/"
+    raw_datadir.mkdir(parents=True, exist_ok=True)
+    filenames_to_process = download_files(s3_client, raw_datadir, filenames_to_process, s3_raw_files_folder)
     logger.debug(
         "Found %s raw files, %s already processed files. Need to process - %s files",
         len(raw_filenames),
         len(processed_filenames),
         len(filenames_to_process),
     )
+    processed_dir = artifacts_path / "processed_data"
     for filename in tqdm(
         filenames_to_process, desc="Processing files", total=len(filenames_to_process)
     ):
         process_file(
-            bucket_name,
+            processed_dir,
             filename,
-            s3_raw_files_folder,
-            s3_processed_files_folder,
             spark,
         )
+    
+    upload_files(s3_client, list(processed_dir.rglob("*.parquet")), s3_processed_files_folder)
 
 
 if __name__ == "__main__":
