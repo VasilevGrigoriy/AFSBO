@@ -13,9 +13,22 @@ default_args = {
     "email": ["vasiliev-greg@mail.ru"],
     "email_on_failure": False,
     "email_on_retry": False,
-    "retries": 1,
+    "retries": 0,
     "retry_delay": timedelta(minutes=5),
 }
+
+command = 'cd project/\
+ && curl -sSL https://install.python-poetry.org | python3 -\
+ && export PATH="$HOME/.local/bin:$PATH"\
+ && source $(poetry env info --path)/bin/activate\
+ && poetry install --no-interaction --no-ansi --no-root  --with=dev\
+ && poetry install --no-interaction --no-ansi --no-root  --with=pyspark\
+ && poetry install --no-interaction --no-ansi --no-root  --with=s3\
+ && poetry install --no-interaction --no-ansi --no-root  --with=logs\
+ && poetry install --no-interaction --no-ansi --no-root  --with=click\
+ && poetry install --no-interaction --no-ansi --no-root --with=mlflow\
+ && poetry install --with=airflow\
+ && python3 afsbo/clean_data/clean_data.py'
 
 with DAG(
     dag_id="clean-data-with-spark-cluster",
@@ -28,17 +41,7 @@ with DAG(
 
     clean_data = SSHOperator(
         task_id="clear-data",
-        command="cd project/\
-            && curl -sSL https://install.python-poetry.org | python3\
-            && export PATH='/root/.local/bin:$PATH'\
-            && poetry shell\
-            && poetry install --no-interaction --no-ansi -vvv --with=dev\
-            && poetry install --no-interaction --no-ansi -vvv --with=pyspark\
-            && poetry install --no-interaction --no-ansi -vvv --with=s3\
-            && poetry install --no-interaction --no-ansi -vvv --with=logs\
-            && poetry install --no-interaction --no-ansi -vvv --with=click\
-            && poetry install --no-interaction --no-ansi -vvv --with=airflow\
-            && python3 afsbo/clear_data/clear_data.py",
+        command=command,
         ssh_hook=sshHook,
     )
 

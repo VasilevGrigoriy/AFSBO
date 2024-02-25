@@ -13,10 +13,22 @@ default_args = {
     "email": ["vasiliev-greg@mail.ru"],
     "email_on_failure": False,
     "email_on_retry": False,
-    "retries": 1,
+    "retries": 0,
     "retry_delay": timedelta(minutes=5),
 }
 
+command = "cd project/\
+ && curl -sSL https://install.python-poetry.org | python3 -\
+ && export PATH='/root/.local/bin:$PATH'\
+ && poetry shell\
+ && poetry install --no-interaction --no-ansi -vvv --with=dev\
+ && poetry install --no-interaction --no-ansi -vvv --with=pyspark\
+ && poetry install --no-interaction --no-ansi -vvv --with=s3\
+ && poetry install --no-interaction --no-ansi -vvv --with=logs\
+ && poetry install --no-interaction --no-ansi -vvv --with=click\
+ && poetry install --no-interaction --no-ansi -vvv --with=mlflow\
+ && poetry install --no-interaction --no-ansi -vvv --with=airflow\
+ && python3 afsbo/train/cross_validation_train.py"
 with DAG(
     dag_id="train-models-with-spark-cluster",
     default_args=default_args,
@@ -28,18 +40,7 @@ with DAG(
 
     train_models = SSHOperator(
         task_id="train-models",
-        command="cd project/\
-            && curl -sSL https://install.python-poetry.org | python3\
-            && export PATH='/root/.local/bin:$PATH'\
-            && poetry shell\
-            && poetry install --no-interaction --no-ansi -vvv --with=dev\
-            && poetry install --no-interaction --no-ansi -vvv --with=pyspark\
-            && poetry install --no-interaction --no-ansi -vvv --with=s3\
-            && poetry install --no-interaction --no-ansi -vvv --with=logs\
-            && poetry install --no-interaction --no-ansi -vvv --with=click\
-            && poetry install --no-interaction --no-ansi -vvv --with=mlflow\
-            && poetry install --no-interaction --no-ansi -vvv --with=airflow\
-            && python3 afsbo/train/cross_validation_train.py",
+        command=command,
         ssh_hook=sshHook,
     )
 
