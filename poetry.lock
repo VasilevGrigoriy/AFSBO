@@ -5355,6 +5355,17 @@ files = [
 tests = ["pytest"]
 
 [[package]]
+name = "py4j"
+version = "0.10.9"
+description = "Enables Python programs to dynamically access arbitrary Java objects"
+optional = false
+python-versions = "*"
+files = [
+    {file = "py4j-0.10.9-py2.py3-none-any.whl", hash = "sha256:859ba728a7bb43e9c2bf058832759fb97a598bb28cc12f34f5fc4abdec08ede6"},
+    {file = "py4j-0.10.9.tar.gz", hash = "sha256:36ec57f43ff8ced260a18aa9a4e46c3500a730cac8860e259cbaa546c2b9db2f"},
+]
+
+[[package]]
 name = "pyarrow"
 version = "15.0.0"
 description = "Python library for Apache Arrow"
@@ -5517,6 +5528,24 @@ files = [
 
 [package.extras]
 diagrams = ["jinja2", "railroad-diagrams"]
+
+[[package]]
+name = "pyspark"
+version = "3.0.3"
+description = "Apache Spark Python API"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pyspark-3.0.3.tar.gz", hash = "sha256:c4499903e3d7289cf2b4bf7755fb32cf17922598f3b85a1c230860dec020eec4"},
+]
+
+[package.dependencies]
+py4j = "0.10.9"
+
+[package.extras]
+ml = ["numpy (>=1.7)"]
+mllib = ["numpy (>=1.7)"]
+sql = ["pandas (>=0.23.2)", "pyarrow (>=0.15.1)"]
 
 [[package]]
 name = "python-daemon"
@@ -7074,4 +7103,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "f5fa22ce070529067cb2b2dd3c6726cf24e2acabfbd21c7cbcfbbf2859bdc7e9"
+content-hash = "23347fcdf27f0b10f4c45fb6c6fe3797d5d1ee91d25ce2baa7ee03f3c20b9f2f"

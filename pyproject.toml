@@ -12,6 +12,7 @@ python-dotenv = "^1.0.1"
 
 [tool.poetry.group.pyspark.dependencies]
 findspark = "^2.0.1"
+pyspark = "3.0.3"
 
 
 [tool.poetry.group.research.dependencies]
