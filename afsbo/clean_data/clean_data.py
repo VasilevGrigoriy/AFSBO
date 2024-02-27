@@ -23,15 +23,7 @@ from afsbo.utils import init_basic_logger
 logger = init_basic_logger(__name__, logging.DEBUG)
 
 # Эмулируем последовательно поступающие данные
-if "DATE" not in os.environ:
-    os.environ["DATE"] = "2019-08-23"
 CURRENT_DATE = datetime.date.fromisoformat(os.environ.get("DATE"))
-logger.debug("Current date in system env - %s", str(CURRENT_DATE))
-# Обновляем дату на следующий месяц
-os.environ["DATE"] = str(CURRENT_DATE + datetime.timedelta(days=31))
-logger.debug(
-    "Update system date by 31 days. Next run date will be %s", os.environ.get("DATE")
-)
 
 findspark.init()
 findspark.find()
