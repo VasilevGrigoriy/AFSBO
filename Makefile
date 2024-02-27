@@ -22,3 +22,7 @@ docker-install:
 poetry-install:
 	curl -sSL https://install.python-poetry.org | python3 -
 	export PATH=$(HOME)/.local/bin:$(PATH)
+
+git-config:
+	git config --global user.name "VasilevGrigoriy"
+	git config --global user.email "vasiliev-greg@mail.ru"

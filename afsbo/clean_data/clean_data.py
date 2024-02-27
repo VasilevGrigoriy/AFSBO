@@ -3,6 +3,7 @@ import logging
 import os
 from glob import glob
 from typing import List
+import shutil
 
 import click
 import findspark
@@ -115,8 +116,8 @@ def process_file(
         logger.debug("Cleaning data file...")
         data = clean_data(data)
 
-        save_path = processed_dir / str(filepath.name)[:-4]
-        data.write.parquet(save_path)
+        save_path = processed_dir / (filepath.name[:-4] + ".parquet")
+        data.write.parquet(str(save_path))
         logger.debug(f"Cleaned data saved in {save_path}")
     except Exception as e:
         logger.debug(f"Problems with file {filepath}. Error: {str(e)}")
@@ -153,6 +154,8 @@ def download_files(s3_client: S3Client, artifacts_path: Path, filenames_to_downl
     return list(artifacts_path.rglob("*.txt"))
 
 def upload_files(s3_client: S3Client, filenames_to_upload: List[Path], folder: str) -> None:
+    logger.debug("Files to push: %s", filenames_to_upload)
+    logger.debug("Pushing %s files to %s in s3", len(filenames_to_upload), folder)
     for filename in filenames_to_upload:
         s3_client.upload_file(filename, f"{folder}/{filename.name}")
 
@@ -219,9 +222,10 @@ def main(s3_bucket_name: str, s3_raw_files_folder: str, s3_processed_files_folde
             filename,
             spark,
         )
+        data_path = filename.name[:-4] + ".parquet"
+        upload_files(s3_client, list((processed_dir / data_path).rglob("*.parquet")), s3_processed_files_folder + "/" + data_path)
     
-    upload_files(s3_client, list(processed_dir.rglob("*.parquet")), s3_processed_files_folder)
-
+    shutil.rmtree(str(artifacts_path.resolve()))
 
 if __name__ == "__main__":
     main()
