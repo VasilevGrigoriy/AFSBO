@@ -1,19 +1,22 @@
 from datetime import timedelta, date
-import os
-import dotenv
+from pathlib import Path
 
 from airflow import DAG
 from airflow.providers.ssh.hooks.ssh import SSHHook
 from airflow.providers.ssh.operators.ssh import SSHOperator
 from airflow.utils.dates import days_ago
 
-import dotenv
-dotenv_file = dotenv.find_dotenv("../.env")
-dotenv.load_dotenv(dotenv_file)
-DATE = os.environ.get("DATE")
-# Обновляем дату на следующий месяц
-os.environ["DATE"] = str(date.fromisoformat(DATE) + timedelta(days=31))
-dotenv.set_key(dotenv_file, "DATE", os.environ["DATE"])
+date_file = Path("date.txt").resolve()
+# with open(date_file, encoding="utf-8", mode="w") as file_:
+#         file_.write("2019-08-22")
+if not date_file.exists():
+    CURRENT_DATE = date.fromisoformat("2019-08-22")
+else:
+    with open(date_file, encoding="utf-8", mode="r") as file_:
+        CURRENT_DATE = date.fromisoformat(file_.readline())
+
+with open(date_file, encoding="utf-8", mode="w") as file_:
+        file_.write(str(CURRENT_DATE + timedelta(days=31)))
 
 sshHook = SSHHook(ssh_conn_id="spark_server", cmd_timeout=18000, conn_timeout=18000)
 
@@ -30,7 +33,7 @@ default_args = {
 command = f'cd project/ \
 && curl -sSL https://install.python-poetry.org | python3 - \
 && export PATH="$HOME/.local/bin:$PATH" \
-$$ export DATE={DATE} \
+&& export CURRENT_DATE="{CURRENT_DATE}" \
 && poetry install \
 && source $(poetry env info --path)/bin/activate \
 && python3 afsbo/clean_data/clean_data.py'
