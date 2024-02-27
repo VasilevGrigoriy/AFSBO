@@ -20,14 +20,8 @@ default_args = {
 command = 'cd project/\
  && curl -sSL https://install.python-poetry.org | python3 -\
  && export PATH="$HOME/.local/bin:$PATH"\
+ && poetry install\
  && source $(poetry env info --path)/bin/activate\
- && poetry install --no-interaction --no-ansi --no-root  --with=dev\
- && poetry install --no-interaction --no-ansi --no-root  --with=pyspark\
- && poetry install --no-interaction --no-ansi --no-root  --with=s3\
- && poetry install --no-interaction --no-ansi --no-root  --with=logs\
- && poetry install --no-interaction --no-ansi --no-root  --with=click\
- && poetry install --no-interaction --no-ansi --no-root --with=mlflow\
- && poetry install --with=airflow\
  && python3 afsbo/clean_data/clean_data.py'
 
 with DAG(

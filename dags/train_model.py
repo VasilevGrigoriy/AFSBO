@@ -17,18 +17,12 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-command = "cd project/\
+command = 'cd project/\
  && curl -sSL https://install.python-poetry.org | python3 -\
- && export PATH='/root/.local/bin:$PATH'\
- && poetry shell\
- && poetry install --no-interaction --no-ansi -vvv --with=dev\
- && poetry install --no-interaction --no-ansi -vvv --with=pyspark\
- && poetry install --no-interaction --no-ansi -vvv --with=s3\
- && poetry install --no-interaction --no-ansi -vvv --with=logs\
- && poetry install --no-interaction --no-ansi -vvv --with=click\
- && poetry install --no-interaction --no-ansi -vvv --with=mlflow\
- && poetry install --no-interaction --no-ansi -vvv --with=airflow\
- && python3 afsbo/train/cross_validation_train.py"
+ && export PATH="$HOME/.local/bin:$PATH"\
+ && poetry install\
+ && source $(poetry env info --path)/bin/activate\
+ && python3 afsbo/train/cross_validation_train.py'
 with DAG(
     dag_id="train-models-with-spark-cluster",
     default_args=default_args,
